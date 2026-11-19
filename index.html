@@ -1,0 +1,722 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#2a0f13">
+<style>
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}img{max-width:100%}[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<title>Bolo de Sábado</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: uma coluna no celular (escolher → sabor → frase → prévia/gerar); no desktop, controles à esquerda e prévia fixa à direita. Tema único bordô da Novo Lar. */
+@font-face { font-family: "AnekSE"; src: url("fonts/AnekLatin_SemiExpanded-Regular.ttf") format("truetype"); font-weight: 400; font-display: block; }
+@font-face { font-family: "AnekSE"; src: url("fonts/AnekLatin_SemiExpanded-Bold.ttf") format("truetype"); font-weight: 700; font-display: block; }
+@font-face { font-family: "AnekUI"; src: url("fonts/AnekLatin-Regular.ttf") format("truetype"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "AnekUI"; src: url("fonts/AnekLatin-SemiBold.ttf") format("truetype"); font-weight: 600; font-display: swap; }
+:root {
+  --bg: #2a0f13;
+  --surface: #3a161b;
+  --surface-2: #471c22;
+  --line: rgba(225, 217, 205, 0.16);
+  --fg: #e8e0d4;
+  --muted: #b5a189;
+  --red: #c54346;
+  --cream: #e1d9cd;
+  --bordo: #5b2225;
+  --display: "AnekSE", "Arial", system-ui, sans-serif;
+  --body: "AnekUI", "Arial", system-ui, sans-serif;
+  color-scheme: dark;
+}
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 16px; line-height: 1.45; }
+.wrap { max-width: 1040px; margin: 0 auto; padding-block: 20px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+header { display: grid; gap: 4px; padding-bottom: 18px; border-bottom: 1px solid var(--line); margin-bottom: 20px; }
+.eyebrow { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 6vw, 40px); line-height: 1.05; margin: 0; text-wrap: balance; }
+header p { margin: 4px 0 0; color: var(--muted); max-width: 60ch; }
+.grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; }
+@media (min-width: 860px) { .grid { grid-template-columns: minmax(0, 1fr) 340px; align-items: start; } .side { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); } }
+section { display: grid; gap: 12px; }
+.steps { display: grid; gap: 28px; min-width: 0; }
+h2 { font-family: var(--display); font-weight: 700; font-size: 18px; margin: 0; display: flex; gap: 10px; align-items: baseline; }
+h2 .n { font-size: 13px; color: var(--muted); font-weight: 400; }
+.hint { color: var(--muted); font-size: 14px; margin: 0; }
+.upload { position: relative; display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 64px; border: 1.5px dashed rgba(225,217,205,.4); border-radius: 14px; background: var(--surface); color: var(--fg); font-weight: 600; cursor: pointer; padding: 14px; text-align: center; }
+.upload:focus-within { outline: 2px solid var(--cream); outline-offset: 2px; }
+.upload input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+.thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px; }
+.thumb { position: relative; aspect-ratio: 9 / 16; border-radius: 10px; overflow: hidden; background: var(--surface-2); max-width: 100%; }
+.thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.thumb .tag { position: absolute; left: 6px; top: 6px; font-size: 11px; font-weight: 600; background: rgba(20,6,8,.72); color: var(--cream); padding: 2px 7px; border-radius: 999px; }
+.thumb .tag.ex { background: var(--red); color: #fff; }
+.thumb .ctl { position: absolute; left: 0; right: 0; bottom: 0; display: flex; justify-content: space-between; padding: 4px; background: linear-gradient(transparent, rgba(20,6,8,.8)); }
+.thumb button { width: 30px; height: 30px; border-radius: 8px; border: 0; background: rgba(225,217,205,.92); color: var(--bordo); font-size: 18px; line-height: 1; cursor: pointer; font-family: var(--body); font-weight: 600; }
+.thumb button:focus-visible { outline: 2px solid #fff; outline-offset: 1px; }
+.thumb button:disabled { opacity: .35; cursor: default; }
+input[type=text], textarea { width: 100%; box-sizing: border-box; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; color: var(--fg); font: inherit; font-size: 17px; padding: 13px 14px; }
+input[type=text]:focus, textarea:focus { outline: 2px solid var(--cream); outline-offset: 1px; border-color: transparent; }
+textarea { min-height: 84px; resize: vertical; }
+.frases { display: grid; gap: 8px; }
+.frase { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; align-items: start; padding: 12px 14px; border-radius: 12px; background: var(--surface); border: 1px solid transparent; cursor: pointer; }
+.frase:has(input:checked) { border-color: var(--cream); background: var(--surface-2); }
+.frase input { margin: 3px 0 0; accent-color: var(--cream); width: 18px; height: 18px; }
+.frase span { min-width: 0; font-size: 15px; }
+.frase b { font-weight: 600; }
+.badge { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; background: var(--red); color: #fff; border-radius: 999px; padding: 1px 8px; margin-left: 6px; vertical-align: 2px; }
+.side { display: grid; gap: 14px; justify-items: center; }
+.stage { width: 100%; max-width: 320px; aspect-ratio: 9 / 16; border-radius: 16px; overflow: hidden; background: #000; box-shadow: 0 18px 40px rgba(0,0,0,.45); }
+.stage canvas { width: 100%; height: 100%; display: block; }
+.stage video { width: 100%; height: 100%; display: block; object-fit: contain; background: #000; }
+.row { display: flex; flex-wrap: wrap; gap: 10px; width: 100%; max-width: 320px; }
+.btn { flex: 1 1 140px; min-height: 50px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); font: inherit; font-weight: 600; font-size: 16px; cursor: pointer; padding: 10px 14px; }
+.btn.primary { background: var(--cream); color: var(--bordo); border-color: var(--cream); }
+.btn:focus-visible { outline: 2px solid var(--cream); outline-offset: 2px; }
+.btn:disabled { opacity: .45; cursor: default; }
+.bar { width: 100%; max-width: 320px; height: 6px; border-radius: 99px; background: var(--surface-2); overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--cream); transition: width .1s linear; }
+.status { width: 100%; max-width: 320px; font-size: 14px; color: var(--muted); min-height: 1.4em; margin: 0; }
+.status.err { color: #ffb3b0; }
+.after { width: 100%; max-width: 320px; background: var(--surface); border-radius: 14px; padding: 14px 16px; display: grid; gap: 8px; font-size: 14px; }
+.after ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+.after strong { color: var(--cream); }
+.copy { display: flex; gap: 8px; align-items: center; }
+.copy code { flex: 1; font-family: var(--body); font-weight: 600; font-size: 16px; background: var(--bg); padding: 8px 10px; border-radius: 8px; user-select: all; }
+.copy button { min-height: 38px; border-radius: 8px; border: 0; background: var(--cream); color: var(--bordo); font: inherit; font-weight: 600; padding: 0 12px; cursor: pointer; }
+@media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Novo Lar Atlântida · Stories</span>
+    <h1>Bolo de Sábado</h1>
+    <p>Escolha as fotos e os vídeos que chegaram, diga o sabor e gere o story pronto, direto do celular.</p>
+  </header>
+
+  <div class="grid">
+    <div class="steps">
+      <section aria-labelledby="h-midia">
+        <h2 id="h-midia"><span class="n">1</span> Fotos e vídeos</h2>
+        <label class="upload" for="arquivos">
+          <span id="upload-txt">Escolher do celular</span>
+          <input id="arquivos" type="file" accept="image/*,video/*" multiple>
+        </label>
+        <p class="hint" id="midia-hint">Pode misturar fotos e vídeos. Os vídeos entram pelo final de cada take (onde costuma estar o bolo). O story fica com até 15 segundos.</p>
+        <div class="thumbs" id="thumbs" aria-live="polite"></div>
+      </section>
+
+      <section aria-labelledby="h-sabor">
+        <h2 id="h-sabor"><span class="n">2</span> Sabor do bolo</h2>
+        <input id="sabor" type="text" value="Churros" placeholder="Ex.: Laranja com Mirtilo" autocomplete="off" aria-describedby="sabor-hint">
+        <p class="hint" id="sabor-hint">Aparece embaixo: “Bolo de <b>Churros</b> / delicioso da”, com espaço para a figurinha da @samara_aguiar. Deixe vazio para “Bolo delicioso da”.</p>
+      </section>
+
+      <section aria-labelledby="h-frase">
+        <h2 id="h-frase"><span class="n">3</span> Frase convite</h2>
+        <div class="frases" id="frases" role="radiogroup" aria-labelledby="h-frase"></div>
+        <textarea id="custom" placeholder="**Parte em negrito** e o resto normal. Use | para quebrar a linha." hidden></textarea>
+      </section>
+    </div>
+
+    <aside class="side" aria-label="Prévia e geração">
+      <div class="stage" id="stage"><canvas id="cv" width="1080" height="1920" aria-label="Prévia do story"></canvas><video id="result" playsinline controls hidden></video></div>
+      <div class="bar" aria-hidden="true"><i id="bar"></i></div>
+      <p class="status" id="status" role="status">Exemplo carregado. Troque pelas fotos e vídeos de hoje.</p>
+      <div class="row">
+        <button class="btn" id="btn-pos" type="button">Outra posição do texto</button>
+      </div>
+      <div class="row">
+        <button class="btn" id="btn-prev" type="button">Ver prévia</button>
+        <button class="btn primary" id="btn-gerar" type="button">Gerar vídeo</button>
+      </div>
+      <div class="row">
+        <button class="btn" id="btn-salvar" type="button" hidden>Salvar vídeo</button>
+        <button class="btn" id="btn-foto" type="button">Salvar como foto</button>
+      </div>
+      <div class="after" id="after" hidden>
+        <ol>
+          <li id="passo1">No Instagram, abra um <strong>story</strong> e escolha o arquivo salvo.</li>
+          <li>Figurinha <strong>Menção</strong>: coloque logo depois de “delicioso da”.</li>
+          <li>Figurinha <strong>Música</strong> para a trilha.</li>
+        </ol>
+        <div class="copy"><code id="arroba">@samara_aguiar</code><button type="button" id="btn-copy">Copiar</button></div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mp4-muxer@5.1.3/build/mp4-muxer.min.js"></script>
+<script>
+(() => {
+  // ---------------------------------------------------------------- parâmetros (iguais ao bolo.py)
+  const W = 1080, H = 1920, FPS = 30, XFADE = 0.4, FOTO_DUR = 3.6, FOTO_UNICA = 7.0,
+        VIDEO_MAX = 4.5, TOTAL_MAX = 15.0, M = 107, TXT = "rgb(252,248,242)";
+  const FRASES = [
+    "**Sábadou aqui na|Novo Lar Atlântida** com bolo, café e ótimas oportunidades de investimento no Litoral!",
+    "**Sábado é dia de visitar|a Novo Lar Atlântida!** Tem café, tem bolo e uma equipe pronta pra te apresentar as melhores oportunidades do litoral.",
+    "**Um café, uma conversa|e grandes oportunidades.** Hoje ainda tem bolo fresquinho te esperando na Novo Lar Atlântida.",
+    "**Passa aqui hoje!** O café tá passado, o bolo tá na mesa e as melhores oportunidades do litoral estão te esperando.",
+    "**Sábado com sabor|de casa nova.** Vem tomar um café com a gente na Novo Lar Atlântida.",
+    "**Visita boa|é com bolo e café.** Vem conhecer as oportunidades do litoral com a equipe da Novo Lar Atlântida.",
+    "**Bolo fresquinho,|café passado** e o imóvel dos seus sonhos: te esperamos hoje na Novo Lar Atlântida!",
+    "**Hoje tem bolo|na Novo Lar Atlântida!** Aproveita o sábado pra conhecer os lançamentos do litoral com calma."
+  ];
+
+  const $ = (id) => document.getElementById(id);
+  const cv = $("cv"), ctx = cv.getContext("2d");
+  const state = { items: [], frase: semana() % FRASES.length, busy: false, blob: null, ext: "mp4" };
+
+  function semana() {               // semana ISO, igual ao Python (isocalendar)
+    const d = new Date(); d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + 3 - ((d.getDay() + 6) % 7));
+    const w1 = new Date(d.getFullYear(), 0, 4);
+    return 1 + Math.round(((d - w1) / 864e5 - 3 + ((w1.getDay() + 6) % 7)) / 7);
+  }
+  const ease = (u) => { u = Math.min(Math.max(u, 0), 1); return 1 - Math.pow(1 - u, 3); };
+  const status = (msg, err) => { const s = $("status"); s.textContent = msg; s.classList.toggle("err", !!err); };
+
+  // ---------------------------------------------------------------- frases (UI)
+  function fraseHTML(f) {
+    return f.split("**").map((p, i) => { const t = p.replace(/\|/g, " ").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c])); return i % 2 ? "<b>" + t + "</b>" : t; }).join("");
+  }
+  function montaFrases() {
+    const box = $("frases"); box.innerHTML = "";
+    const atual = semana() % FRASES.length;
+    FRASES.forEach((f, i) => {
+      const l = document.createElement("label"); l.className = "frase";
+      l.innerHTML = '<input type="radio" name="frase" id="frase-' + i + '" value="' + i + '"' + (i === state.frase ? " checked" : "") + '><span>' + fraseHTML(f) + (i === atual ? '<span class="badge">desta semana</span>' : "") + "</span>";
+      box.appendChild(l);
+    });
+    const l = document.createElement("label"); l.className = "frase";
+    l.innerHTML = '<input type="radio" name="frase" id="frase-custom" value="-1"><span>Escrever outra frase</span>';
+    box.appendChild(l);
+    box.addEventListener("change", (e) => {
+      state.frase = +e.target.value; $("custom").hidden = state.frase !== -1;
+      if (state.frase === -1) $("custom").focus();
+      atualiza();
+    });
+  }
+  const fraseAtual = () => state.frase === -1 ? ($("custom").value.trim() || "**Hoje tem bolo|na Novo Lar Atlântida!**") : FRASES[state.frase];
+
+  // ---------------------------------------------------------------- texto no canvas
+  const fnt = (b, s) => (b ? "700 " : "400 ") + s + "px AnekSE";
+  function segmentos(f) {
+    const out = [];
+    f.split("**").forEach((p, k) => p.split("|").forEach((s) => { s = s.trim(); if (s) out.push({ t: s, b: k % 2 === 1 }); }));
+    return out;
+  }
+  function quebra(texto, b, size, larg) {
+    ctx.font = fnt(b, size);
+    const linhas = []; let atual = "";
+    texto.split(/\s+/).forEach((w) => {
+      const t = (atual + " " + w).trim();
+      if (ctx.measureText(t).width <= larg || !atual) atual = t; else { linhas.push(atual); atual = w; }
+    });
+    if (atual) linhas.push(atual);
+    return linhas;
+  }
+  // ---------------------------------------------------------------- onde o texto aparece melhor
+  // Mapa de custo 108x192 (células de 10 px), somando todas as cenas: textura/bordas (granulado, objetos),
+  // cor de bolo (caramelo, laranja, massa), claridade (texto branco some no claro) e um peso no centro-baixo,
+  // onde o bolo costuma estar. A frase vai para o retângulo de menor custo.
+  const GW = 108, GH = 192, CELL = 10, LH_A = 60, LH_B = 58, Y_MIN = 280, Y_MAX = 1660;
+  const STICKER = 330;              // espaço livre depois de "delicioso da" para a figurinha @samara_aguiar
+  let mapa = null;
+  const PRIOR = new Float32Array(GW * GH);
+  for (let j = 0; j < GH; j++) for (let i = 0; i < GW; i++) {
+    const dx = (i / GW - 0.5) / 0.28, dy = (j / GH - 0.64) / 0.18;
+    PRIOR[j * GW + i] = Math.exp(-0.5 * (dx * dx + dy * dy));
+  }
+  function blur3(a) {               // média 3x3, duas passadas
+    for (let pass = 0; pass < 2; pass++) {
+      const b = new Float32Array(a.length);
+      for (let j = 0; j < GH; j++) for (let i = 0; i < GW; i++) {
+        let s = 0, n = 0;
+        for (let v = -1; v <= 1; v++) for (let u = -1; u <= 1; u++) {
+          const x = i + u, y = j + v; if (x < 0 || y < 0 || x >= GW || y >= GH) continue; s += a[y * GW + x]; n++;
+        }
+        b[j * GW + i] = s / n;
+      }
+      a = b;
+    }
+    return a;
+  }
+  function custoQuadro(px) {
+    const L = new Float32Array(GW * GH), warm = new Float32Array(GW * GH);
+    for (let k = 0; k < GW * GH; k++) {
+      const r = px[4 * k], g = px[4 * k + 1], b = px[4 * k + 2];
+      L[k] = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+      const mx = Math.max(r, g, b);
+      warm[k] = (r >= g && g >= b && mx > 60 && (r - b) / mx > 0.25 && g / r > 0.45 && g / r < 0.92) ? 1 : 0;
+    }
+    let G = new Float32Array(GW * GH);
+    for (let j = 0; j < GH; j++) for (let i = 0; i < GW; i++) {
+      const k = j * GW + i;
+      const gx = i < GW - 1 ? Math.abs(L[k] - L[k + 1]) : 0, gy = j < GH - 1 ? Math.abs(L[k] - L[k + GW]) : 0;
+      G[k] = gx + gy;
+    }
+    G = blur3(G); const Wm = blur3(warm), Lb = blur3(L);
+    const c = new Float32Array(GW * GH);
+    for (let k = 0; k < c.length; k++) c[k] = Math.min(1, G[k] / 0.18) + 0.9 * Wm[k] + 0.35 * Lb[k] + 0.6 * PRIOR[k];
+    return c;
+  }
+  async function analisa() {
+    montaCenas();
+    if (!cenas.length) { mapa = null; return; }
+    const sc = document.createElement("canvas"); sc.width = GW; sc.height = GH;
+    const g = sc.getContext("2d", { willReadFrequently: true });
+    const soma = new Float32Array(GW * GH), maxi = new Float32Array(GW * GH); let n = 0;
+    for (const c of cenas) {
+      const ts = c.it.kind === "video" ? [0.08, 0.3, 0.5, 0.7, 0.92].map((f) => f * c.dur) : [0.1 * c.dur, 0.9 * c.dur];
+      for (const tl of ts) {
+        if (c.it.kind === "video") await seek(c.it.src, c.seg + tl);
+        g.fillStyle = "#000"; g.fillRect(0, 0, GW, GH);
+        desenhaCena(c, tl, 1, g, GW, GH);
+        const cq = custoQuadro(g.getImageData(0, 0, GW, GH).data);
+        for (let k = 0; k < cq.length; k++) { soma[k] += cq[k]; if (cq[k] > maxi[k]) maxi[k] = cq[k]; }
+        n++;
+      }
+    }
+    const I = new Float64Array((GW + 1) * (GH + 1));   // imagem integral do custo combinado
+    for (let j = 0; j < GH; j++) for (let i = 0; i < GW; i++) {
+      const k = j * GW + i, v = 0.4 * soma[k] / n + 0.6 * maxi[k];   // pesa o pior momento: se o bolo passa por ali, evita
+      I[(j + 1) * (GW + 1) + i + 1] = v + I[j * (GW + 1) + i + 1] + I[(j + 1) * (GW + 1) + i] - I[j * (GW + 1) + i];
+    }
+    mapa = I; state.posIdx = 0;
+  }
+  function custoRet(x, y, w, h) {
+    const c0 = Math.max(0, Math.floor(x / CELL)), c1 = Math.min(GW, Math.ceil((x + w) / CELL));
+    const r0 = Math.max(0, Math.floor(y / CELL)), r1 = Math.min(GH, Math.ceil((y + h) / CELL));
+    if (c1 <= c0 || r1 <= r0) return 9;
+    const s = mapa[r1 * (GW + 1) + c1] - mapa[r0 * (GW + 1) + c1] - mapa[r1 * (GW + 1) + c0] + mapa[r0 * (GW + 1) + c0];
+    return s / ((c1 - c0) * (r1 - r0));
+  }
+  const cruza = (a, b, m) => a.x < b.x + b.w + m && b.x < a.x + a.w + m && a.y < b.y + b.h + m && b.y < a.y + a.h + m;
+  function posicao(wA, hA, wB, hB) {
+    const padrao = { align: "right", xA: W - M - wA, yA: 610, yB: 1540, total: 1 };
+    if (!mapa) return padrao;
+    const cands = [];
+    for (const align of ["right", "left", "center"]) {
+      const xA = align === "right" ? W - M - wA : align === "left" ? M : (W - wA) / 2;
+      for (let y = Y_MIN; y <= Y_MAX - hA; y += 30) {
+        const bonus = align === "right" ? -0.03 : 0;          // empate: fica no jeito que vocês já postam
+        cands.push({ align, xA, yA: y, c: custoRet(xA - 30, y - 20, wA + 60, hA + 40) + bonus });
+      }
+    }
+    // para cada posição da frase, o melhor lugar do sabor ABAIXO dela (lê na ordem certa) e longe do bolo
+    const ladoB = (cA) => {
+      const rA = { x: cA.xA, y: cA.yA, w: wA, h: hA };
+      let best = null;
+      for (let y = cA.yA + hA + 40; y <= Y_MAX - hB; y += 20) {
+        const rB = { x: M, y, w: wB, h: hB };
+        if (cruza(rA, rB, 40)) continue;
+        const c = custoRet(M - 20, y - 20, wB + 40, hB + 40) + 0.10 * (1 - y / Y_MAX);
+        if (!best || c < best.c) best = { y, c };
+      }
+      return best;
+    };
+    cands.forEach((k) => { const b = ladoB(k); k.yB = b ? b.y : null; k.total = k.c + (b ? 0.7 * b.c : 9); });
+    cands.sort((a, b) => a.total - b.total);
+    const top = [];
+    for (const k of cands) {
+      if (top.every((t) => t.align !== k.align || Math.abs(t.yA - k.yA) >= 300)) top.push(k);
+      if (top.length === 4) break;
+    }
+    const A = top[(state.posIdx || 0) % top.length];
+    return { align: A.align, xA: A.xA, yA: A.yA, yB: A.yB == null ? Math.min(1540, Y_MAX - hB) : A.yB, total: top.length };
+  }
+
+  let layout = [], scrim = null;
+  function montaTextos() {
+    const mede = (parts, size) => parts.map((p) => { ctx.font = fnt(p.b, size); return ctx.measureText(p.t).width; });
+    const linha = (parts, size) => { const ws = mede(parts, size); return { parts, size, ws, w: ws.reduce((a, b) => a + b, 0) }; };
+    const A = [];
+    segmentos(fraseAtual()).forEach((sg) => quebra(sg.t, sg.b, 47, sg.b ? 700 : 640).forEach((ln) => A.push(linha([{ t: ln, b: sg.b }], 47))));
+    const sabor = $("sabor").value.trim();
+    const B = sabor ? [linha([{ t: "Bolo de ", b: false }, { t: sabor, b: true }], 44), linha([{ t: "delicioso da", b: false }], 44)]
+                    : [linha([{ t: "Bolo delicioso da", b: false }], 44)];
+    const wA = Math.max(...A.map((l) => l.w)), hA = A.length * LH_A;
+    const wB = Math.max(...B.map((l) => l.w), B[B.length - 1].w + STICKER), hB = B.length * LH_B;
+    const P = posicao(wA, hA, wB, hB);
+    state.posTotal = P.total;
+    layout = []; let t = 0.25;
+    A.forEach((L, i) => {
+      const x = P.align === "right" ? P.xA + wA - L.w : P.align === "left" ? P.xA : P.xA + (wA - L.w) / 2;
+      layout.push(Object.assign({}, L, { x, y: P.yA + i * LH_A, t0: t })); t += 0.10;
+    });
+    let tb = t + 0.35;
+    B.forEach((L, i) => { layout.push(Object.assign({}, L, { x: M, y: P.yB + i * LH_B, t0: tb })); tb += 0.12; });
+    // sombra bordô que acompanha o texto: máscara grossa do texto -> sombra desfocada (funciona também no Safari)
+    const mask = document.createElement("canvas"); mask.width = W; mask.height = H;
+    const mc = mask.getContext("2d");
+    mc.textBaseline = "top"; mc.lineJoin = "round"; mc.lineWidth = 30; mc.fillStyle = mc.strokeStyle = "#000";
+    layout.forEach((L) => { let x = L.x; L.parts.forEach((p, i) => { mc.font = fnt(p.b, L.size); mc.strokeText(p.t, x, L.y); mc.fillText(p.t, x, L.y); x += L.ws[i]; }); });
+    scrim = document.createElement("canvas"); scrim.width = W; scrim.height = H;
+    const sc = scrim.getContext("2d");
+    sc.shadowColor = "rgba(46,14,20,0.62)"; sc.shadowBlur = 110; sc.shadowOffsetX = 6000;
+    sc.drawImage(mask, -6000, 0);
+  }
+  function desenhaTextos(t) {
+    const k = ease((t - layout[0].t0 + 0.1) / 0.6);
+    if (k > 0) { ctx.globalAlpha = k; ctx.drawImage(scrim, 0, 0); ctx.globalAlpha = 1; }
+    ctx.textBaseline = "top"; ctx.fillStyle = TXT;
+    ctx.shadowColor = "rgba(0,0,0,0.55)"; ctx.shadowBlur = 18; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
+    layout.forEach((L) => {
+      const u = ease((t - L.t0) / 0.55); if (u <= 0) return;
+      ctx.globalAlpha = u;
+      const dy = (1 - u) * 24; let x = L.x;
+      L.parts.forEach((p, i) => { ctx.font = fnt(p.b, L.size); ctx.fillText(p.t, x, L.y + dy); x += L.ws[i]; });
+    });
+    ctx.globalAlpha = 1; ctx.shadowColor = "transparent"; ctx.shadowBlur = 0;
+  }
+
+  // ---------------------------------------------------------------- cenas
+  let cenas = [], starts = [], total = 0;
+  function montaCenas() {
+    const its = state.items;
+    const n = its.length;
+    const vmax = Math.max(2.5, Math.min(VIDEO_MAX, (TOTAL_MAX + XFADE * (n - 1)) / n));
+    cenas = its.map((it, k) => {
+      if (it.kind === "video") {
+        const dur = Math.min(vmax, Math.max(it.dur - 0.4, 0.5));
+        return { it, k, dur, seg: Math.max(0, it.dur - dur - 0.3) };
+      }
+      return { it, k, dur: n === 1 ? FOTO_UNICA : FOTO_DUR };
+    });
+    while (cenas.length > 2 && cenas.reduce((a, c) => a + c.dur, 0) - XFADE * (cenas.length - 1) > TOTAL_MAX + 0.5) cenas.pop();
+    starts = []; let t = 0;
+    cenas.forEach((c) => { starts.push(t); t += c.dur - XFADE; });
+    total = t + XFADE;
+  }
+  function desenhaCena(c, tl, alpha, g = ctx, w = W, h = H) {
+    g.globalAlpha = alpha;
+    const src = c.it.src;
+    const iw = c.it.kind === "video" ? src.videoWidth : src.width, ih = c.it.kind === "video" ? src.videoHeight : src.height;
+    if (!iw || !ih) { g.globalAlpha = 1; return; }
+    let s = Math.max(W / iw, H / ih), sw = W / s, sh = H / s;
+    if (c.it.kind === "photo") {
+      const u = Math.min(Math.max(tl / c.dur, 0), 1);
+      const z = c.k % 2 === 0 ? 1.12 - 0.10 * u : 1.02 + 0.10 * u;   // alterna zoom-in / zoom-out
+      sw = (W / s) * (z / 1.12); sh = (H / s) * (z / 1.12);
+    }
+    g.drawImage(src, (iw - sw) / 2, (ih - sh) / 2, sw, sh, 0, 0, w, h);
+    g.globalAlpha = 1;
+  }
+  function desenha(t) {
+    ctx.fillStyle = "#000"; ctx.fillRect(0, 0, W, H);
+    if (!cenas.length) return;
+    let i = 0; for (let k = 0; k < starts.length; k++) if (starts[k] <= t + 1e-6) i = k;
+    if (i > 0 && t - starts[i] < XFADE) {
+      desenhaCena(cenas[i - 1], t - starts[i - 1], 1);
+      desenhaCena(cenas[i], t - starts[i], (t - starts[i]) / XFADE);
+    } else desenhaCena(cenas[i], t - starts[i], 1);
+    desenhaTextos(t);
+  }
+
+  // ---------------------------------------------------------------- vídeos: posicionar e tocar
+  function seek(v, t) {
+    return new Promise((res) => {
+      if (Math.abs(v.currentTime - t) < 0.02 && v.readyState >= 2) return res();
+      const done = () => { v.removeEventListener("seeked", done); clearTimeout(to); res(); };
+      const to = setTimeout(done, 3000);
+      v.addEventListener("seeked", done); v.currentTime = t;
+    });
+  }
+  async function preparaVideos() {
+    for (const c of cenas) if (c.it.kind === "video") { c.it.src.pause(); await seek(c.it.src, c.seg); }
+  }
+  function paraVideos() { state.items.forEach((it) => { if (it.kind === "video") it.src.pause(); }); }
+
+  let fotoBlob = null;
+  async function still() {
+    if (state.busy) return;
+    fotoBlob = null;
+    montaCenas();
+    const t = Math.min(2.6, total - 0.1);
+    let i = 0; for (let k = 0; k < starts.length; k++) if (starts[k] <= t) i = k;
+    const c = cenas[i];
+    if (c && c.it.kind === "video") { c.it.src.pause(); await seek(c.it.src, c.seg + (t - starts[i])); }
+    desenha(t);
+    const marca = cenas;
+    cv.toBlob((b) => { if (marca === cenas && !state.busy) fotoBlob = b; }, "image/jpeg", 0.92);
+  }
+  let pend = 0;
+  function atualiza() { clearTimeout(pend); pend = setTimeout(() => { montaTextos(); still(); limpaResultado(); }, 120); }
+
+  // ---------------------------------------------------------------- tocar a linha do tempo (prévia ou gravação)
+  async function toca(gravar) {
+    state.busy = true; fotoBlob = null; montaCenas(); montaTextos();
+    $("result").hidden = true; cv.hidden = false;
+    await preparaVideos();
+    let wake = null; try { wake = await navigator.wakeLock.request("screen"); } catch (e) {}
+    let enc = null, rec = null, chunks = [], erro = null, idx = 0;
+    const N = Math.round(total * FPS);
+    if (gravar) {
+      enc = await criaEncoder();
+      if (!enc) rec = criaRecorder(chunks);
+      if (!enc && !rec) { state.busy = false; status("Este navegador não grava vídeo. Use “Salvar como foto” ou abra no Chrome/Safari atualizado.", true); return null; }
+      if (enc) enc.encoder.onerror = (e) => { erro = e; };
+      if (rec) rec.start(250);
+    }
+    const iniciados = new Set();
+    let perdido = false;
+    const onVis = () => { if (document.hidden) perdido = true; };
+    document.addEventListener("visibilitychange", onVis);
+    const t0 = performance.now();
+    await new Promise((fim) => {
+      function frame(now) {
+        const t = (now - t0) / 1000;
+        cenas.forEach((c, k) => {
+          if (c.it.kind === "video" && t >= starts[k] - 0.03 && !iniciados.has(k)) { iniciados.add(k); c.it.src.play().catch(() => {}); }
+        });
+        desenha(Math.min(t, total - 0.001));
+        if (enc && idx < N && idx / FPS <= t) {
+          // só o quadro mais recente que já venceu: em aparelho lento o quadro fica mais longo, sem fila de cópias
+          const ult = Math.min(N - 1, Math.floor(t * FPS + 1e-6));
+          const ultimo = t >= total || ult === N - 1;
+          if (enc.encoder.encodeQueueSize < 8 || ultimo) {
+            const vf = new VideoFrame(cv, { timestamp: Math.round(ult * 1e6 / FPS) });
+            enc.encoder.encode(vf, { keyFrame: ult - enc.ultKey >= 60 || ult === 0 }); vf.close();
+            if (ult - enc.ultKey >= 60 || ult === 0) enc.ultKey = ult;
+            idx = ult + 1;
+          }
+        }
+        $("bar").style.width = Math.min(100, 100 * t / total) + "%";
+        if (t >= total || perdido || erro) return fim();
+        agenda();
+      }
+      // relógio duplo: requestAnimationFrame (suave) com um timer de reserva, para nunca ficar preso em "Gravando…"
+      let pendente = false, to = 0;
+      function agenda() {
+        if (pendente) return;
+        pendente = true;
+        const vai = () => { if (!pendente) return; pendente = false; clearTimeout(to); frame(performance.now()); };
+        requestAnimationFrame(vai); to = setTimeout(vai, 60);
+      }
+      document.addEventListener("visibilitychange", () => { if (document.hidden) { perdido = true; fim(); } }, { once: true });
+      agenda();
+    });
+    document.removeEventListener("visibilitychange", onVis);
+    paraVideos(); try { wake && wake.release(); } catch (e) {}
+    let blob = null;
+    if (gravar) {
+      if (enc) {
+        try { await enc.encoder.flush(); enc.muxer.finalize(); blob = new Blob([enc.muxer.target.buffer], { type: "video/mp4" }); state.ext = "mp4"; }
+        catch (e) { erro = erro || e; }
+        try { enc.encoder.close(); } catch (e) {}
+      } else {
+        await new Promise((r) => { rec.onstop = r; rec.stop(); });
+        state.ext = rec.mimeType.includes("mp4") ? "mp4" : "webm";
+        blob = new Blob(chunks, { type: rec.mimeType });
+      }
+    }
+    state.busy = false;
+    if (perdido) { status("A gravação parou porque a tela saiu da página. Gere de novo e mantenha esta tela aberta até o fim.", true); still(); return null; }
+    if (erro) { status("Não consegui gravar o vídeo aqui (" + (erro.message || erro) + "). Tente de novo ou use “Salvar como foto”.", true); still(); return null; }
+    return blob;
+  }
+
+  async function criaEncoder() {
+    if (!("VideoEncoder" in window) || !window.Mp4Muxer) return null;
+    for (const codec of ["avc1.640028", "avc1.4d0028", "avc1.420028"]) {
+      const cfg = { codec, width: W, height: H, bitrate: 8e6, framerate: FPS, avc: { format: "avc" } };
+      try {
+        const sup = await VideoEncoder.isConfigSupported(cfg);
+        if (!sup.supported) continue;
+        const muxer = new Mp4Muxer.Muxer({ target: new Mp4Muxer.ArrayBufferTarget(), video: { codec: "avc", width: W, height: H, frameRate: FPS }, fastStart: "in-memory", firstTimestampBehavior: "offset" });
+        const encoder = new VideoEncoder({ output: (ch, meta) => muxer.addVideoChunk(ch, meta), error: (e) => { encoder.onerror && encoder.onerror(e); } });
+        encoder.configure(cfg);
+        return { encoder, muxer, ultKey: -999 };
+      } catch (e) {}
+    }
+    return null;
+  }
+  function criaRecorder(chunks) {
+    if (!("MediaRecorder" in window) || !cv.captureStream) return null;
+    const tipo = ["video/mp4;codecs=avc1.42E01E", "video/mp4", "video/webm;codecs=vp9", "video/webm"].find((t) => MediaRecorder.isTypeSupported(t));
+    if (!tipo) return null;
+    const r = new MediaRecorder(cv.captureStream(FPS), { mimeType: tipo, videoBitsPerSecond: 8e6 });
+    r.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
+    return r;
+  }
+
+  // ---------------------------------------------------------------- salvar
+  let downloads = null;
+  (async () => { try { downloads = window.claude && window.claude.use ? await window.claude.use("downloads") : null; } catch (e) { downloads = null; } rotulos(); })();
+  function nomeArquivo(ext) {
+    const d = new Date(), dt = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    const s = $("sabor").value.trim();
+    return "Story bolo de sábado " + dt + (s ? " - " + s.replace(/[\\/:*?"<>|]/g, "") : "") + "." + ext;
+  }
+  // Três caminhos, do melhor para o pior:
+  // 1) dentro do claude.ai: capability "downloads" (no app do Claude para iPhone abre a folha de compartilhar);
+  // 2) fora do claude.ai (link próprio): folha de compartilhar do celular -> Instagram -> Stories (Android e iPhone);
+  // 3) senão: baixa o arquivo.
+  const TIPOS = { mp4: "video/mp4", webm: "video/webm", jpg: "image/jpeg" };
+  function podeCompartilhar(ext) {
+    try { return !!(navigator.canShare && navigator.canShare({ files: [new File(["x"], "a." + ext, { type: TIPOS[ext] })] })); } catch (e) { return false; }
+  }
+  function rotulos() {
+    const share = !downloads && podeCompartilhar("mp4");
+    $("btn-salvar").textContent = downloads ? "Salvar vídeo" : share ? "Enviar para o Instagram" : "Baixar vídeo";
+    $("btn-foto").textContent = downloads ? "Salvar como foto" : share ? "Enviar como foto" : "Baixar como foto";
+    $("passo1").innerHTML = share ? "Na tela de compartilhar, toque em <strong>Instagram</strong> e depois em <strong>Stories</strong>."
+                                  : "No Instagram, abra um <strong>story</strong> e escolha o arquivo salvo.";
+  }
+  async function salva(data, ext) {
+    const file = new File([data], nomeArquivo(ext), { type: TIPOS[ext] || "application/octet-stream" });
+    if (downloads) {
+      try { await downloads.save({ filename: file.name, data }); status("Salvo. Agora é só postar."); $("after").hidden = false; return true; }
+      catch (e) {
+        const c = e && e.code;
+        if (c === "declined") status("Salvamento cancelado.");
+        else if (c === "rate_limited") status("Já tem uma janela de salvar aberta. Responda a ela e tente de novo.", true);
+        else status("Não deu para salvar aqui (" + (c || "erro") + ").", true);
+        return false;
+      }
+    }
+    if (podeCompartilhar(ext)) {
+      try { await navigator.share({ files: [file] }); status("Enviado. Coloque a menção e a música e publique."); $("after").hidden = false; return true; }
+      catch (e) {
+        if (e && e.name === "AbortError") { status("Compartilhamento cancelado."); return false; }
+        if (e && e.name !== "NotAllowedError") { status("Não deu para compartilhar (" + (e.message || e.name) + "). Vou baixar o arquivo.", true); }
+        else { status("Toque de novo em “" + (ext === "jpg" ? $("btn-foto") : $("btn-salvar")).textContent + "”."); return false; }
+      }
+    }
+    const a = document.createElement("a"); a.href = URL.createObjectURL(file); a.download = file.name;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+    status("Arquivo baixado. No Instagram, escolha-o no story."); $("after").hidden = false; return true;
+  }
+  function limpaResultado() {
+    if (state.blob) { state.blob = null; $("btn-salvar").hidden = true; const v = $("result"); v.hidden = true; if (v.src) { URL.revokeObjectURL(v.src); v.removeAttribute("src"); } cv.hidden = false; }
+  }
+
+  // ---------------------------------------------------------------- mídia
+  async function carregaFoto(fonte, nome, exemplo) {
+    let bmp;
+    try { bmp = await createImageBitmap(fonte, { imageOrientation: "from-image" }); }
+    catch (e) {
+      bmp = await new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = URL.createObjectURL(fonte); });
+    }
+    return { kind: "photo", src: bmp, nome, exemplo, thumb: URL.createObjectURL(fonte) };
+  }
+  function carregaVideo(file) {
+    return new Promise((res, rej) => {
+      const v = document.createElement("video");
+      v.muted = true; v.playsInline = true; v.setAttribute("playsinline", ""); v.preload = "auto";
+      v.onloadedmetadata = async () => {
+        const it = { kind: "video", src: v, nome: file.name, dur: v.duration, thumb: "" };
+        try {
+          await seek(v, Math.max(0, v.duration - 1));
+          const c = document.createElement("canvas"); c.width = 180; c.height = 320;
+          const g = c.getContext("2d"); const s = Math.max(180 / v.videoWidth, 320 / v.videoHeight);
+          g.drawImage(v, (180 - v.videoWidth * s) / 2, (320 - v.videoHeight * s) / 2, v.videoWidth * s, v.videoHeight * s);
+          it.thumb = c.toDataURL("image/jpeg", 0.7);
+        } catch (e) {}
+        res(it);
+      };
+      v.onerror = () => rej(new Error("vídeo ilegível"));
+      v.src = URL.createObjectURL(file); v.load();
+    });
+  }
+  async function adiciona(files) {
+    if (!files.length) return;
+    if (state.items.some((i) => i.exemplo)) { state.items = []; if ($("sabor").value === "Churros") $("sabor").value = ""; }
+    status("Carregando " + files.length + (files.length > 1 ? " arquivos…" : " arquivo…"));
+    let falhas = 0;
+    for (const f of files) {
+      try {
+        if (f.type.startsWith("video/") || /\.(mp4|mov|m4v|3gp)$/i.test(f.name)) state.items.push(await carregaVideo(f));
+        else state.items.push(await carregaFoto(f, f.name, false));
+      } catch (e) { falhas++; }
+    }
+    renderThumbs(); status("Procurando o melhor lugar para a frase…"); await analisa(); montaTextos(); await still(); limpaResultado();
+    montaCenas();
+    status(falhas ? falhas + " arquivo(s) não abriram aqui. Os outros entraram." : "Story com " + cenas.length + " cena(s), " + total.toFixed(1) + " s.", !!falhas);
+  }
+  function renderThumbs() {
+    const box = $("thumbs"); box.innerHTML = "";
+    state.items.forEach((it, i) => {
+      const d = document.createElement("div"); d.className = "thumb";
+      const tag = it.exemplo ? '<span class="tag ex">Exemplo</span>' : '<span class="tag">' + (i + 1) + (it.kind === "video" ? " · vídeo" : "") + "</span>";
+      d.innerHTML = (it.thumb ? '<img alt="" src="' + it.thumb + '">' : "") + tag +
+        '<div class="ctl"><button type="button" data-a="esq" data-i="' + i + '" aria-label="Mover para antes"' + (i === 0 ? " disabled" : "") + '>‹</button>' +
+        '<button type="button" data-a="del" data-i="' + i + '" aria-label="Tirar do story">×</button>' +
+        '<button type="button" data-a="dir" data-i="' + i + '" aria-label="Mover para depois"' + (i === state.items.length - 1 ? " disabled" : "") + '>›</button></div>';
+      box.appendChild(d);
+    });
+    $("upload-txt").textContent = state.items.length && !state.items[0].exemplo ? "Adicionar mais" : "Escolher do celular";
+  }
+  $("thumbs").addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (!b || state.busy) return;
+    const i = +b.dataset.i, a = b.dataset.a, its = state.items;
+    if (a === "del") its.splice(i, 1);
+    if (a === "esq" && i > 0) [its[i - 1], its[i]] = [its[i], its[i - 1]];
+    if (a === "dir" && i < its.length - 1) [its[i + 1], its[i]] = [its[i], its[i + 1]];
+    renderThumbs(); limpaResultado();
+    if (its.length) analisa().then(() => { montaTextos(); still(); }); else { ctx.fillStyle = "#000"; ctx.fillRect(0, 0, W, H); status("Escolha pelo menos uma foto ou vídeo."); }
+  });
+
+  // ---------------------------------------------------------------- botões
+  $("arquivos").addEventListener("change", (e) => { const fs = Array.from(e.target.files || []); e.target.value = ""; adiciona(fs); });
+  $("sabor").addEventListener("input", atualiza);
+  $("custom").addEventListener("input", atualiza);
+  const trava = (on) => ["btn-pos", "btn-prev", "btn-gerar", "btn-foto", "btn-salvar"].forEach((id) => $(id).disabled = on);
+
+  $("btn-prev").addEventListener("click", async () => {
+    if (state.busy || !state.items.length) return;
+    trava(true); limpaResultado(); status("Prévia tocando…");
+    await toca(false); trava(false); $("bar").style.width = "0"; status("Gostou? Toque em “Gerar vídeo”."); still();
+  });
+  $("btn-gerar").addEventListener("click", async () => {
+    if (state.busy) return;
+    if (!state.items.length) { status("Escolha pelo menos uma foto ou vídeo.", true); return; }
+    trava(true); limpaResultado(); $("after").hidden = true;
+    status("Gravando o story (" + total.toFixed(0) + " s). Mantenha esta tela aberta…");
+    const blob = await toca(true);
+    trava(false); $("bar").style.width = "0";
+    if (!blob) return;
+    state.blob = blob;
+    const v = $("result"); v.src = URL.createObjectURL(blob); v.hidden = false; cv.hidden = true;
+    $("btn-salvar").hidden = false;
+    status("Vídeo pronto (" + (blob.size / 1048576).toFixed(1) + " MB). Toque em “" + $("btn-salvar").textContent + "”.");
+    if (downloads) salva(blob, state.ext);      // fora do claude.ai o compartilhar precisa de um toque novo
+  });
+  $("btn-pos").addEventListener("click", () => {
+    if (state.busy || !state.items.length) return;
+    state.posIdx = ((state.posIdx || 0) + 1) % (state.posTotal || 1);
+    limpaResultado(); montaTextos(); still();
+    status(state.posIdx === 0 ? "Posição automática (a que menos cobre o bolo)." : "Opção " + (state.posIdx + 1) + " de " + state.posTotal + ".");
+  });
+  $("btn-salvar").addEventListener("click", () => { if (state.blob) salva(state.blob, state.ext); });
+  $("btn-foto").addEventListener("click", async () => {
+    if (state.busy || !state.items.length) return;
+    if (state.blob) limpaResultado();
+    if (fotoBlob) return salva(fotoBlob, "jpg");
+    cv.toBlob((b) => { if (b) salva(b, "jpg"); }, "image/jpeg", 0.92);
+  });
+  $("btn-copy").addEventListener("click", () => {
+    const t = "@samara_aguiar";
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(() => { $("btn-copy").textContent = "Copiado"; }, sel); else sel();
+    function sel() { const r = document.createRange(); r.selectNodeContents($("arroba")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+  });
+
+  // ---------------------------------------------------------------- início: exemplo
+  montaFrases();
+  (async () => {
+    try { await Promise.all([document.fonts.load("700 47px AnekSE"), document.fonts.load("400 47px AnekSE")]); } catch (e) {}
+    try {
+      const blob = await (await fetch("exemplo.jpg")).blob();
+      if (!state.items.length) { state.items.push(await carregaFoto(blob, "exemplo.jpg", true)); renderThumbs(); }
+    } catch (e) { status("Escolha as fotos e os vídeos de hoje para começar."); }
+    await analisa(); montaTextos(); await still();
+  })();
+})();
+</script>
+
+</body>
+</html>
