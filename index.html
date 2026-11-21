@@ -454,8 +454,8 @@ textarea { min-height: 84px; resize: vertical; }
   // Formatos, do melhor para o mais compatível. Só MP4 (H.264): WebM o Instagram e o WhatsApp recusam.
   const METODOS = [
     { id: "h264-1080", tipo: "wc", w: 1080, h: 1920, codecs: ["avc1.640028", "avc1.4d0028", "avc1.420028"], nome: "MP4 1080x1920" },
-    { id: "h264-720", tipo: "wc", w: 720, h: 1280, codecs: ["avc1.64001f", "avc1.4d001f", "avc1.42001f"], nome: "MP4 720x1280" },
-    { id: "rec-mp4", tipo: "rec", nome: "MP4 (gravador do navegador)" }
+    { id: "h264-720", tipo: "wc", w: 720, h: 1280, codecs: ["avc1.64001f", "avc1.4d001f", "avc1.42001f"], nome: "MP4 720x1280" }
+    // sem MediaRecorder: ele grava com tempo irregular, que a galeria e o Instagram leem com a duração errada
   ];
   function ordemMetodos() {
     let pref = null; try { pref = localStorage.getItem("bolo.metodo"); } catch (e) {}
@@ -488,18 +488,19 @@ textarea { min-height: 84px; resize: vertical; }
         });
         desenha(Math.min(t, total - 0.001));
         if (enc && idx < N && idx / FPS <= t) {
-          // só o quadro mais recente que já venceu: em aparelho lento o quadro fica mais longo, sem fila de cópias
-          const ult = Math.min(N - 1, Math.floor(t * FPS + 1e-6));
-          const ultimo = t >= total || ult === N - 1;
-          if (enc.encoder.encodeQueueSize < 8 || ultimo) {
-            let fonte = cv;
-            if (enc.cvEnc) { enc.gEnc.drawImage(cv, 0, 0, enc.cvEnc.width, enc.cvEnc.height); fonte = enc.cvEnc; }
-            const vf = new VideoFrame(fonte, { timestamp: Math.round(ult * 1e6 / FPS) });
-            const chave = ult - enc.ultKey >= 60;
+          // TODOS os quadros, 30 por segundo cravados: se o celular desenhou devagar, repete o quadro atual.
+          // (Pular quadros deixava o vídeo com 12 s no navegador, mas a galeria/Instagram contavam 30/s e viam ~3 s.)
+          const ult = t >= total ? N - 1 : Math.min(N - 1, Math.floor(t * FPS + 1e-6));
+          let fonte = cv;
+          if (enc.cvEnc) { enc.gEnc.drawImage(cv, 0, 0, enc.cvEnc.width, enc.cvEnc.height); fonte = enc.cvEnc; }
+          while (idx <= ult && !erro) {
+            if (enc.encoder.encodeQueueSize > 45) { erro = new Error("celular lento para este formato"); break; }
+            const vf = new VideoFrame(fonte, { timestamp: Math.round(idx * 1e6 / FPS), duration: Math.round(1e6 / FPS) });
+            const chave = idx - enc.ultKey >= 60;
             try { enc.encoder.encode(vf, { keyFrame: chave }); } catch (e) { erro = e; }
             vf.close();
-            if (chave) enc.ultKey = ult;
-            idx = ult + 1;
+            if (chave) enc.ultKey = idx;
+            idx++;
           }
         }
         $("bar").style.width = Math.min(100, 100 * t / total) + "%";
@@ -524,6 +525,8 @@ textarea { min-height: 84px; resize: vertical; }
         try {
           await enc.encoder.flush();
           if (!enc.pedacos) throw new Error("nenhum quadro codificado");
+          if (idx < N || enc.pedacos < N * 0.97) throw new Error("quadros faltando (" + enc.pedacos + " de " + N + ")");
+          enc.quadros = enc.pedacos;
           if (enc.semCabecalho) throw new Error("codificador sem cabeçalho H.264");
           enc.muxer.finalize(); blob = new Blob([enc.muxer.target.buffer], { type: "video/mp4" });
         } catch (e) { erro = erro || e; }
@@ -535,7 +538,8 @@ textarea { min-height: 84px; resize: vertical; }
       state.ext = "mp4";
     }
     state.busy = false;
-    return { blob: erro ? null : blob, motivo: erro ? String(erro.message || erro) : "", perdido, codec: enc ? enc.codec : (rec ? rec.mimeType : "") };
+    return { blob: erro ? null : blob, motivo: erro ? String(erro.message || erro) : "", perdido,
+             codec: enc ? enc.codec + " · " + enc.pedacos + " quadros" : (rec ? rec.mimeType : "") };
   }
 
   async function criaEncoder(m) {
