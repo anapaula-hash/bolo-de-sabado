@@ -81,6 +81,8 @@ textarea { min-height: 84px; resize: vertical; }
 .bar i { display: block; height: 100%; width: 0; background: var(--cream); transition: width .1s linear; }
 .status { width: 100%; max-width: 320px; font-size: 14px; color: var(--muted); min-height: 1.4em; margin: 0; }
 .status.err { color: #ffb3b0; }
+.diag { width: 100%; max-width: 320px; font-size: 11px; line-height: 1.35; color: var(--muted); opacity: .8; margin: -6px 0 0; overflow-wrap: anywhere; }
+.diag:empty { display: none; }
 .after { width: 100%; max-width: 320px; background: var(--surface); border-radius: 14px; padding: 14px 16px; display: grid; gap: 8px; font-size: 14px; }
 .after ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
 .after strong { color: var(--cream); }
@@ -126,6 +128,7 @@ textarea { min-height: 84px; resize: vertical; }
       <div class="stage" id="stage"><canvas id="cv" width="1080" height="1920" aria-label="Prévia do story"></canvas><video id="result" playsinline controls hidden></video></div>
       <div class="bar" aria-hidden="true"><i id="bar"></i></div>
       <p class="status" id="status" role="status">Exemplo carregado. Troque pelas fotos e vídeos de hoje.</p>
+      <p class="diag" id="diag"></p>
       <div class="row">
         <button class="btn" id="btn-pos" type="button">Outra posição do texto</button>
       </div>
@@ -448,7 +451,19 @@ textarea { min-height: 84px; resize: vertical; }
   function atualiza() { clearTimeout(pend); pend = setTimeout(() => { montaTextos(); still(); limpaResultado(); }, 120); }
 
   // ---------------------------------------------------------------- tocar a linha do tempo (prévia ou gravação)
-  async function toca(gravar) {
+  // Formatos, do melhor para o mais compatível. Só MP4 (H.264): WebM o Instagram e o WhatsApp recusam.
+  const METODOS = [
+    { id: "h264-1080", tipo: "wc", w: 1080, h: 1920, codecs: ["avc1.640028", "avc1.4d0028", "avc1.420028"], nome: "MP4 1080x1920" },
+    { id: "h264-720", tipo: "wc", w: 720, h: 1280, codecs: ["avc1.64001f", "avc1.4d001f", "avc1.42001f"], nome: "MP4 720x1280" },
+    { id: "rec-mp4", tipo: "rec", nome: "MP4 (gravador do navegador)" }
+  ];
+  function ordemMetodos() {
+    let pref = null; try { pref = localStorage.getItem("bolo.metodo"); } catch (e) {}
+    const i = METODOS.findIndex((m) => m.id === pref);
+    return i > 0 ? [METODOS[i]].concat(METODOS.filter((_, k) => k !== i)) : METODOS.slice();
+  }
+
+  async function toca(gravar, metodo) {
     state.busy = true; fotoBlob = null; montaCenas(); montaTextos();
     $("result").hidden = true; cv.hidden = false;
     await preparaVideos();
@@ -456,16 +471,14 @@ textarea { min-height: 84px; resize: vertical; }
     let enc = null, rec = null, chunks = [], erro = null, idx = 0;
     const N = Math.round(total * FPS);
     if (gravar) {
-      enc = await criaEncoder();
-      if (!enc) rec = criaRecorder(chunks);
-      if (!enc && !rec) { state.busy = false; status("Este navegador não grava vídeo. Use “Salvar como foto” ou abra no Chrome/Safari atualizado.", true); return null; }
+      if (metodo.tipo === "wc") enc = await criaEncoder(metodo);
+      else rec = criaRecorder(chunks);
+      if (!enc && !rec) { state.busy = false; return { motivo: "não suportado" }; }
       if (enc) enc.encoder.onerror = (e) => { erro = e; };
       if (rec) rec.start(250);
     }
     const iniciados = new Set();
     let perdido = false;
-    const onVis = () => { if (document.hidden) perdido = true; };
-    document.addEventListener("visibilitychange", onVis);
     const t0 = performance.now();
     await new Promise((fim) => {
       function frame(now) {
@@ -479,9 +492,13 @@ textarea { min-height: 84px; resize: vertical; }
           const ult = Math.min(N - 1, Math.floor(t * FPS + 1e-6));
           const ultimo = t >= total || ult === N - 1;
           if (enc.encoder.encodeQueueSize < 8 || ultimo) {
-            const vf = new VideoFrame(cv, { timestamp: Math.round(ult * 1e6 / FPS) });
-            enc.encoder.encode(vf, { keyFrame: ult - enc.ultKey >= 60 || ult === 0 }); vf.close();
-            if (ult - enc.ultKey >= 60 || ult === 0) enc.ultKey = ult;
+            let fonte = cv;
+            if (enc.cvEnc) { enc.gEnc.drawImage(cv, 0, 0, enc.cvEnc.width, enc.cvEnc.height); fonte = enc.cvEnc; }
+            const vf = new VideoFrame(fonte, { timestamp: Math.round(ult * 1e6 / FPS) });
+            const chave = ult - enc.ultKey >= 60;
+            try { enc.encoder.encode(vf, { keyFrame: chave }); } catch (e) { erro = e; }
+            vf.close();
+            if (chave) enc.ultKey = ult;
             idx = ult + 1;
           }
         }
@@ -500,48 +517,75 @@ textarea { min-height: 84px; resize: vertical; }
       document.addEventListener("visibilitychange", () => { if (document.hidden) { perdido = true; fim(); } }, { once: true });
       agenda();
     });
-    document.removeEventListener("visibilitychange", onVis);
     paraVideos(); try { wake && wake.release(); } catch (e) {}
     let blob = null;
     if (gravar) {
       if (enc) {
-        try { await enc.encoder.flush(); enc.muxer.finalize(); blob = new Blob([enc.muxer.target.buffer], { type: "video/mp4" }); state.ext = "mp4"; }
-        catch (e) { erro = erro || e; }
+        try {
+          await enc.encoder.flush();
+          if (!enc.pedacos) throw new Error("nenhum quadro codificado");
+          if (enc.semCabecalho) throw new Error("codificador sem cabeçalho H.264");
+          enc.muxer.finalize(); blob = new Blob([enc.muxer.target.buffer], { type: "video/mp4" });
+        } catch (e) { erro = erro || e; }
         try { enc.encoder.close(); } catch (e) {}
       } else {
         await new Promise((r) => { rec.onstop = r; rec.stop(); });
-        state.ext = rec.mimeType.includes("mp4") ? "mp4" : "webm";
-        blob = new Blob(chunks, { type: rec.mimeType });
+        blob = new Blob(chunks, { type: "video/mp4" });
       }
+      state.ext = "mp4";
     }
     state.busy = false;
-    if (perdido) { status("A gravação parou porque a tela saiu da página. Gere de novo e mantenha esta tela aberta até o fim.", true); still(); return null; }
-    if (erro) { status("Não consegui gravar o vídeo aqui (" + (erro.message || erro) + "). Tente de novo ou use “Salvar como foto”.", true); still(); return null; }
-    return blob;
+    return { blob: erro ? null : blob, motivo: erro ? String(erro.message || erro) : "", perdido, codec: enc ? enc.codec : (rec ? rec.mimeType : "") };
   }
 
-  async function criaEncoder() {
+  async function criaEncoder(m) {
     if (!("VideoEncoder" in window) || !window.Mp4Muxer) return null;
-    for (const codec of ["avc1.640028", "avc1.4d0028", "avc1.420028"]) {
-      const cfg = { codec, width: W, height: H, bitrate: 8e6, framerate: FPS, avc: { format: "avc" } };
+    for (const codec of m.codecs) {
+      const cfg = { codec, width: m.w, height: m.h, bitrate: m.w >= 1080 ? 8e6 : 5e6, framerate: FPS, avc: { format: "avc" } };
       try {
         const sup = await VideoEncoder.isConfigSupported(cfg);
         if (!sup.supported) continue;
-        const muxer = new Mp4Muxer.Muxer({ target: new Mp4Muxer.ArrayBufferTarget(), video: { codec: "avc", width: W, height: H, frameRate: FPS }, fastStart: "in-memory", firstTimestampBehavior: "offset" });
-        const encoder = new VideoEncoder({ output: (ch, meta) => muxer.addVideoChunk(ch, meta), error: (e) => { encoder.onerror && encoder.onerror(e); } });
-        encoder.configure(cfg);
-        return { encoder, muxer, ultKey: -999 };
+        const muxer = new Mp4Muxer.Muxer({ target: new Mp4Muxer.ArrayBufferTarget(), video: { codec: "avc", width: m.w, height: m.h, frameRate: FPS }, fastStart: "in-memory", firstTimestampBehavior: "offset" });
+        const enc = { muxer, ultKey: -999, codec, pedacos: 0, semCabecalho: false };
+        enc.encoder = new VideoEncoder({
+          output: (ch, meta) => {
+            if (enc.pedacos === 0 && !(meta && meta.decoderConfig && meta.decoderConfig.description)) enc.semCabecalho = true;
+            enc.pedacos++;
+            try { muxer.addVideoChunk(ch, meta); } catch (e) { enc.semCabecalho = true; }
+          },
+          error: (e) => { enc.encoder.onerror && enc.encoder.onerror(e); }
+        });
+        enc.encoder.configure(cfg);
+        if (m.w !== W) { enc.cvEnc = document.createElement("canvas"); enc.cvEnc.width = m.w; enc.cvEnc.height = m.h; enc.gEnc = enc.cvEnc.getContext("2d"); }
+        return enc;
       } catch (e) {}
     }
     return null;
   }
   function criaRecorder(chunks) {
     if (!("MediaRecorder" in window) || !cv.captureStream) return null;
-    const tipo = ["video/mp4;codecs=avc1.42E01E", "video/mp4", "video/webm;codecs=vp9", "video/webm"].find((t) => MediaRecorder.isTypeSupported(t));
+    const tipo = ["video/mp4;codecs=avc1.42E01E", "video/mp4;codecs=avc1", "video/mp4"].find((t) => MediaRecorder.isTypeSupported(t));
     if (!tipo) return null;
     const r = new MediaRecorder(cv.captureStream(FPS), { mimeType: tipo, videoBitsPerSecond: 8e6 });
     r.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
     return r;
+  }
+  // o próprio celular consegue abrir o vídeo? (duração certa e um quadro decodificado)
+  function verifica(blob) {
+    return new Promise((res) => {
+      const v = document.createElement("video"); v.muted = true; v.playsInline = true; v.preload = "auto";
+      const url = URL.createObjectURL(blob);
+      let feito = false;
+      const fim = (ok, motivo) => { if (feito) return; feito = true; clearTimeout(to); v.removeAttribute("src"); v.load(); URL.revokeObjectURL(url); res({ ok, motivo }); };
+      const to = setTimeout(() => fim(false, "o celular não abriu o arquivo"), 8000);
+      v.onerror = () => fim(false, "arquivo ilegível neste celular");
+      v.onloadedmetadata = () => {
+        if (!isFinite(v.duration) || v.duration < total * 0.7) return fim(false, "duração errada (" + v.duration + ")");
+        v.onseeked = () => fim(v.videoWidth > 0, v.videoWidth > 0 ? "" : "sem imagem");
+        v.currentTime = Math.min(1, v.duration / 2);
+      };
+      v.src = url;
+    });
   }
 
   // ---------------------------------------------------------------- salvar
@@ -550,7 +594,9 @@ textarea { min-height: 84px; resize: vertical; }
   function nomeArquivo(ext) {
     const d = new Date(), dt = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
     const s = $("sabor").value.trim();
-    return "Story bolo de sábado " + dt + (s ? " - " + s.replace(/[\\/:*?"<>|]/g, "") : "") + "." + ext;
+    // só letras sem acento, números e hífen: alguns apps de Android recusam nomes com acento ou espaço
+    const limpo = (x) => x.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    return "story-bolo-sabado-" + dt + (s ? "-" + limpo(s) : "") + "." + ext;
   }
   // Três caminhos, do melhor para o pior:
   // 1) dentro do claude.ai: capability "downloads" (no app do Claude para iPhone abre a folha de compartilhar);
@@ -670,20 +716,40 @@ textarea { min-height: 84px; resize: vertical; }
   $("btn-prev").addEventListener("click", async () => {
     if (state.busy || !state.items.length) return;
     trava(true); limpaResultado(); status("Prévia tocando…");
-    await toca(false); trava(false); $("bar").style.width = "0"; status("Gostou? Toque em “Gerar vídeo”."); still();
+    await toca(false, null); trava(false); $("bar").style.width = "0"; status("Gostou? Toque em “Gerar vídeo”."); still();
   });
   $("btn-gerar").addEventListener("click", async () => {
     if (state.busy) return;
     if (!state.items.length) { status("Escolha pelo menos uma foto ou vídeo.", true); return; }
-    trava(true); limpaResultado(); $("after").hidden = true;
-    status("Gravando o story (" + total.toFixed(0) + " s). Mantenha esta tela aberta…");
-    const blob = await toca(true);
-    trava(false); $("bar").style.width = "0";
-    if (!blob) return;
+    trava(true); limpaResultado(); $("after").hidden = true; $("diag").textContent = "";
+    // tenta os formatos em ordem e só entrega o vídeo que o próprio celular conseguiu abrir
+    const falhas = []; let blob = null, usado = null, codec = "";
+    const ordem = ordemMetodos();
+    for (let k = 0; k < ordem.length && !blob; k++) {
+      montaCenas();
+      status(k === 0 ? "Gravando o story (" + total.toFixed(0) + " s). Mantenha esta tela aberta…"
+                     : "Ajustando o formato para este celular (tentativa " + (k + 1) + ")… mantenha a tela aberta.");
+      const r = await toca(true, ordem[k]);
+      $("bar").style.width = "0";
+      if (r.perdido) { trava(false); status("A gravação parou porque a tela saiu da página. Gere de novo e mantenha esta tela aberta até o fim.", true); still(); return; }
+      if (!r.blob) { falhas.push(ordem[k].nome + ": " + (r.motivo || "falhou")); continue; }
+      status("Conferindo se o vídeo abre neste celular…");
+      const ok = await verifica(r.blob);
+      if (ok.ok) { blob = r.blob; usado = ordem[k]; codec = r.codec; }
+      else falhas.push(ordem[k].nome + ": " + ok.motivo);
+    }
+    trava(false);
+    if (!blob) {
+      status("Este celular não conseguiu gerar um vídeo compatível. Use “" + $("btn-foto").textContent + "” ou gere pelo computador.", true);
+      $("diag").textContent = "Detalhes: " + falhas.join(" · ") + " · " + navigator.userAgent;
+      still(); return;
+    }
+    try { localStorage.setItem("bolo.metodo", usado.id); } catch (e) {}
     state.blob = blob;
     const v = $("result"); v.src = URL.createObjectURL(blob); v.hidden = false; cv.hidden = true;
     $("btn-salvar").hidden = false;
-    status("Vídeo pronto (" + (blob.size / 1048576).toFixed(1) + " MB). Toque em “" + $("btn-salvar").textContent + "”.");
+    $("diag").textContent = "Formato: " + usado.nome + " · " + codec + " · " + (blob.size / 1048576).toFixed(1) + " MB" + (falhas.length ? " · antes falhou: " + falhas.join(" · ") : "");
+    status("Vídeo pronto. Toque em “" + $("btn-salvar").textContent + "”.");
     if (downloads) salva(blob, state.ext);      // fora do claude.ai o compartilhar precisa de um toque novo
   });
   $("btn-pos").addEventListener("click", () => {
