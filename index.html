@@ -70,7 +70,9 @@ textarea { min-height: 84px; resize: vertical; }
 .badge { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; background: var(--red); color: #fff; border-radius: 999px; padding: 1px 8px; margin-left: 6px; vertical-align: 2px; }
 .side { display: grid; gap: 14px; justify-items: center; }
 .stage { width: 100%; max-width: 320px; aspect-ratio: 9 / 16; border-radius: 16px; overflow: hidden; background: #000; box-shadow: 0 18px 40px rgba(0,0,0,.45); }
-.stage canvas { width: 100%; height: 100%; display: block; }
+.stage canvas { width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+.stage canvas.arrastando { cursor: grabbing; }
+.dica { width: 100%; max-width: 320px; font-size: 13px; color: var(--muted); margin: -4px 0 0; text-align: center; }
 .stage video { width: 100%; height: 100%; display: block; object-fit: contain; background: #000; }
 .row { display: flex; flex-wrap: wrap; gap: 10px; width: 100%; max-width: 320px; }
 .btn { flex: 1 1 140px; min-height: 50px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); font: inherit; font-weight: 600; font-size: 16px; cursor: pointer; padding: 10px 14px; }
@@ -126,6 +128,7 @@ textarea { min-height: 84px; resize: vertical; }
 
     <aside class="side" aria-label="Prévia e geração">
       <div class="stage" id="stage"><canvas id="cv" width="1080" height="1920" aria-label="Prévia do story"></canvas><video id="result" playsinline controls hidden></video></div>
+      <p class="dica" id="dica">Arraste a frase ou o sabor na prévia para mudar de lugar.</p>
       <div class="bar" aria-hidden="true"><i id="bar"></i></div>
       <p class="status" id="status" role="status">Exemplo carregado. Troque pelas fotos e vídeos de hoje.</p>
       <p class="diag" id="diag"></p>
@@ -289,7 +292,7 @@ textarea { min-height: 84px; resize: vertical; }
       const k = j * GW + i, v = 0.4 * soma[k] / n + 0.6 * maxi[k];   // pesa o pior momento: se o bolo passa por ali, evita
       I[(j + 1) * (GW + 1) + i + 1] = v + I[j * (GW + 1) + i + 1] + I[(j + 1) * (GW + 1) + i] - I[j * (GW + 1) + i];
     }
-    mapa = I; state.posIdx = 0;
+    mapa = I; state.posIdx = 0; state.manA = state.manB = null;
   }
   function custoRet(x, y, w, h) {
     const c0 = Math.max(0, Math.floor(x / CELL)), c1 = Math.min(GW, Math.ceil((x + w) / CELL));
@@ -346,13 +349,24 @@ textarea { min-height: 84px; resize: vertical; }
     const wB = Math.max(...B.map((l) => l.w), B[B.length - 1].w + STICKER), hB = B.length * LH_B;
     const P = posicao(wA, hA, wB, hB);
     state.posTotal = P.total;
+    // posição arrastada à mão vale por cima da automática
+    const lim = (v, a, b) => Math.max(a, Math.min(b, v));
+    let xA = P.xA, yA = P.yA, align = P.align, xB = M, yB = P.yB;
+    const wBt = Math.max(...B.map((l) => l.w));
+    if (state.manA) {
+      xA = lim(state.manA.x, 30, W - 30 - wA); yA = lim(state.manA.y, Y_MIN, Y_MAX - hA);
+      const cx = xA + wA / 2; align = cx < W * 0.38 ? "left" : cx > W * 0.62 ? "right" : "center";
+    }
+    if (state.manB) { xB = lim(state.manB.x, 30, W - 30 - wBt); yB = lim(state.manB.y, Y_MIN, Y_MAX - hB); }
+    state.rectA = { x: xA, y: yA, w: wA, h: hA }; state.rectB = { x: xB, y: yB, w: wBt, h: hB };
     layout = []; let t = 0.25;
     A.forEach((L, i) => {
-      const x = P.align === "right" ? P.xA + wA - L.w : P.align === "left" ? P.xA : P.xA + (wA - L.w) / 2;
-      layout.push(Object.assign({}, L, { x, y: P.yA + i * LH_A, t0: t })); t += 0.10;
+      const x = align === "right" ? xA + wA - L.w : align === "left" ? xA : xA + (wA - L.w) / 2;
+      layout.push(Object.assign({}, L, { x, y: yA + i * LH_A, t0: t })); t += 0.10;
     });
     let tb = t + 0.35;
-    B.forEach((L, i) => { layout.push(Object.assign({}, L, { x: M, y: P.yB + i * LH_B, t0: tb })); tb += 0.12; });
+    B.forEach((L, i) => { layout.push(Object.assign({}, L, { x: xB, y: yB + i * LH_B, t0: tb })); tb += 0.12; });
+    if (state.arrastando) { scrim = null; return; }      // durante o arraste, sem a sombra (é pesada); volta ao soltar
     // sombra bordô que acompanha o texto: máscara grossa do texto -> sombra desfocada (funciona também no Safari)
     const mask = document.createElement("canvas"); mask.width = W; mask.height = H;
     const mc = mask.getContext("2d");
@@ -365,7 +379,7 @@ textarea { min-height: 84px; resize: vertical; }
   }
   function desenhaTextos(t) {
     const k = ease((t - layout[0].t0 + 0.1) / 0.6);
-    if (k > 0) { ctx.globalAlpha = k; ctx.drawImage(scrim, 0, 0); ctx.globalAlpha = 1; }
+    if (k > 0 && scrim) { ctx.globalAlpha = k; ctx.drawImage(scrim, 0, 0); ctx.globalAlpha = 1; }
     ctx.textBaseline = "top"; ctx.fillStyle = TXT;
     ctx.shadowColor = "rgba(0,0,0,0.55)"; ctx.shadowBlur = 18; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
     layout.forEach((L) => {
@@ -443,6 +457,7 @@ textarea { min-height: 84px; resize: vertical; }
     let i = 0; for (let k = 0; k < starts.length; k++) if (starts[k] <= t) i = k;
     const c = cenas[i];
     if (c && c.it.kind === "video") { c.it.src.pause(); await seek(c.it.src, c.seg + (t - starts[i])); }
+    state.tStill = t;
     desenha(t);
     const marca = cenas;
     cv.toBlob((b) => { if (marca === cenas && !state.busy) fotoBlob = b; }, "image/jpeg", 0.92);
@@ -759,9 +774,57 @@ textarea { min-height: 84px; resize: vertical; }
   $("btn-pos").addEventListener("click", () => {
     if (state.busy || !state.items.length) return;
     state.posIdx = ((state.posIdx || 0) + 1) % (state.posTotal || 1);
+    state.manA = state.manB = null;          // volta para as sugestões automáticas
     limpaResultado(); montaTextos(); still();
     status(state.posIdx === 0 ? "Posição automática (a que menos cobre o bolo)." : "Opção " + (state.posIdx + 1) + " de " + state.posTotal + ".");
   });
+  // ---------------------------------------------------------------- arrastar a frase ou o sabor na prévia
+  let drag = null, quadroPend = false;
+  function ponto(e) {
+    const r = cv.getBoundingClientRect();
+    return { x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * H / r.height };
+  }
+  const dentro = (p, r, m) => r && p.x >= r.x - m && p.x <= r.x + r.w + m && p.y >= r.y - m && p.y <= r.y + r.h + m;
+  function redesenhaArraste() {
+    if (quadroPend) return; quadroPend = true;
+    requestAnimationFrame(() => {
+      quadroPend = false;
+      montaTextos(); desenha(state.tStill || 2.6);
+      if (drag) {
+        const r = drag.alvo === "A" ? state.rectA : state.rectB;
+        ctx.save(); ctx.setLineDash([14, 10]); ctx.lineWidth = 3; ctx.strokeStyle = "rgba(255,255,255,.85)";
+        ctx.strokeRect(r.x - 22, r.y - 16, r.w + 44, r.h + 26); ctx.restore();
+      }
+    });
+  }
+  cv.addEventListener("pointerdown", (e) => {
+    if (state.busy || !state.items.length || !state.rectA) return;
+    const p = ponto(e);
+    // o sabor tem prioridade (bloco menor); margem generosa para o dedo
+    const alvo = dentro(p, state.rectB, 50) ? "B" : dentro(p, state.rectA, 50) ? "A" : null;
+    if (!alvo) return;
+    e.preventDefault();
+    try { cv.setPointerCapture(e.pointerId); } catch (er) {}
+    const r = alvo === "A" ? state.rectA : state.rectB;
+    drag = { alvo, dx: p.x - r.x, dy: p.y - r.y };
+    state.arrastando = alvo; fotoBlob = null; cv.classList.add("arrastando");
+    redesenhaArraste();
+  });
+  cv.addEventListener("pointermove", (e) => {
+    if (!drag) return;
+    const p = ponto(e), nova = { x: p.x - drag.dx, y: p.y - drag.dy };
+    if (drag.alvo === "A") state.manA = nova; else state.manB = nova;
+    redesenhaArraste();
+  });
+  function soltaArraste() {
+    if (!drag) return;
+    drag = null; state.arrastando = null; cv.classList.remove("arrastando");
+    montaTextos(); still();
+    status("Posição ajustada. Quando quiser, toque em “Gerar vídeo”.");
+  }
+  cv.addEventListener("pointerup", soltaArraste);
+  cv.addEventListener("pointercancel", soltaArraste);
+
   $("btn-salvar").addEventListener("click", () => { if (state.blob) salva(state.blob, state.ext); });
   $("btn-foto").addEventListener("click", async () => {
     if (state.busy || !state.items.length) return;
